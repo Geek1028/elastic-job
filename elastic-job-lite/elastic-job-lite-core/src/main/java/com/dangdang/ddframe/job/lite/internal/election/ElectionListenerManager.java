@@ -57,14 +57,14 @@ public class ElectionListenerManager extends AbstractListenerManager {
     public void start() {
         addDataListener(new LeaderElectionJobListener());
     }
-    
+
     class LeaderElectionJobListener extends AbstractJobListener {
         
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
             EventHelper eventHelper = new EventHelper(path, event);
             if (eventHelper.isLeaderCrashedOrServerOn() && !leaderElectionService.hasLeader() && !serverService.getAvailableServers().isEmpty()) {
-                log.debug("Leader crashed, elect a new leader now.");
+                log.debug("Leader crashed, select a new leader now.");
                 leaderElectionService.leaderElection();
                 log.debug("Leader election completed.");
                 return;

@@ -32,25 +32,29 @@ import java.util.List;
 
 /**
  * 为调度器提供内部服务的门面类.
- * 
+ *
  * @author zhangliang
  */
 public class SchedulerFacade {
-    
+
     private final ConfigurationService configService;
-    
+
     private final LeaderElectionService leaderElectionService;
-    
+
     private final ServerService serverService;
-    
+
     private final ShardingService shardingService;
-    
+
     private final ExecutionService executionService;
-    
+
     private final MonitorService monitorService;
-    
+
     private final ListenerManager listenerManager;
-    
+
+    private final CoordinatorRegistryCenter regCenter;
+
+    private final String jobName;
+
     public SchedulerFacade(final CoordinatorRegistryCenter regCenter, final String jobName, final List<ElasticJobListener> elasticJobListeners) {
         configService = new ConfigurationService(regCenter, jobName);
         leaderElectionService = new LeaderElectionService(regCenter, jobName);
@@ -59,18 +63,20 @@ public class SchedulerFacade {
         executionService = new ExecutionService(regCenter, jobName);
         monitorService = new MonitorService(regCenter, jobName);
         listenerManager = new ListenerManager(regCenter, jobName, elasticJobListeners);
+        this.regCenter = regCenter;
+        this.jobName = jobName;
     }
-    
+
     /**
      * 每次作业启动前清理上次运行状态.
      */
     public void clearPreviousServerStatus() {
         serverService.clearPreviousServerStatus();
     }
-    
+
     /**
      * 注册Elastic-Job启动信息.
-     * 
+     *
      * @param liteJobConfig 作业配置
      */
     public void registerStartUpInfo(final LiteJobConfiguration liteJobConfig) {
@@ -83,15 +89,18 @@ public class SchedulerFacade {
         monitorService.listen();
         listenerManager.setCurrentShardingTotalCount(configService.load(false).getTypeConfig().getCoreConfig().getShardingTotalCount());
     }
-    
+
     /**
      * 释放作业占用的资源.
      */
     public void releaseJobResource() {
         monitorService.close();
         serverService.removeServerStatus();
+        listenerManager.closeAllListeners();
+        regCenter.removeCacheData("/" + jobName);
+        JobRegistry.getInstance().removeJobScheduleController(jobName);
     }
-    
+
     /**
      * 读取作业配置.
      *
@@ -100,10 +109,10 @@ public class SchedulerFacade {
     public LiteJobConfiguration loadJobConfiguration() {
         return configService.load(false);
     }
-    
+
     /**
      * 获取作业触发监听器.
-     * 
+     *
      * @return 作业触发监听器
      */
     public JobTriggerListener newJobTriggerListener() {

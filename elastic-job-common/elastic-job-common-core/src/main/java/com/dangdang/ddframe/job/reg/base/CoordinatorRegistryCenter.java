@@ -79,7 +79,14 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
      * @param cachePath 需加入缓存的路径
      */
     void addCacheData(String cachePath);
-    
+
+    /**
+     * 移除本地缓存.
+     *
+     * @param cachePath 需移除缓存的路径
+     */
+    void removeCacheData(String cachePath);
+
     /**
      * 获取注册中心数据缓存对象.
      * 
@@ -87,4 +94,6 @@ public interface CoordinatorRegistryCenter extends RegistryCenter {
      * @return 注册中心数据缓存对象
      */
     Object getRawCache(String cachePath);
+
+
 }

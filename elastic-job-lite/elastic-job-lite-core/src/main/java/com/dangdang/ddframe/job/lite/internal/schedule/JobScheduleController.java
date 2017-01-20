@@ -19,37 +19,30 @@ package com.dangdang.ddframe.job.lite.internal.schedule;
 
 import com.dangdang.ddframe.job.exception.JobSystemException;
 import lombok.RequiredArgsConstructor;
-import org.quartz.CronScheduleBuilder;
-import org.quartz.CronTrigger;
-import org.quartz.JobDetail;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import org.quartz.TriggerKey;
+import org.quartz.*;
 
 import java.util.Date;
 import java.util.List;
 
 /**
  * 作业调度控制器.
- * 
+ *
  * @author zhangliang
  */
 @RequiredArgsConstructor
 public class JobScheduleController {
-    
+
     private final Scheduler scheduler;
-    
+
     private final JobDetail jobDetail;
-    
+
     private final SchedulerFacade schedulerFacade;
-    
+
     private final String triggerIdentity;
-    
+
     /**
      * 调度作业.
-     * 
+     *
      * @param cron CRON表达式
      */
     public void scheduleJob(final String cron) {
@@ -62,10 +55,10 @@ public class JobScheduleController {
             throw new JobSystemException(ex);
         }
     }
-    
+
     /**
      * 重新调度作业.
-     * 
+     *
      * @param cron CRON表达式
      */
     public void rescheduleJob(final String cron) {
@@ -78,7 +71,7 @@ public class JobScheduleController {
             throw new JobSystemException(ex);
         }
     }
-    
+
     private CronTrigger createTrigger(final String cron) {
         CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(cron);
         if (schedulerFacade.loadJobConfiguration().getTypeConfig().getCoreConfig().isMisfire()) {
@@ -90,10 +83,22 @@ public class JobScheduleController {
                 .withIdentity(triggerIdentity)
                 .withSchedule(cronScheduleBuilder).build();
     }
-    
+
+    private SimpleTrigger createAtOnceTrigger() {
+        SimpleScheduleBuilder simpleScheduleBuilder = SimpleScheduleBuilder.simpleSchedule().withRepeatCount(1).withIntervalInSeconds(1);
+        if (schedulerFacade.loadJobConfiguration().getTypeConfig().getCoreConfig().isMisfire()) {
+            simpleScheduleBuilder = simpleScheduleBuilder.withMisfireHandlingInstructionFireNow();
+        } else {
+            simpleScheduleBuilder = simpleScheduleBuilder.withMisfireHandlingInstructionIgnoreMisfires();
+        }
+        return TriggerBuilder.newTrigger()
+                .withIdentity(triggerIdentity)
+                .withSchedule(simpleScheduleBuilder).build();
+    }
+
     /**
      * 获取下次作业触发时间.
-     * 
+     *
      * @return 下次作业触发时间
      */
     public Date getNextFireTime() {
@@ -117,7 +122,7 @@ public class JobScheduleController {
         }
         return result;
     }
-    
+
     /**
      * 暂停作业.
      */
@@ -130,7 +135,7 @@ public class JobScheduleController {
             throw new JobSystemException(ex);
         }
     }
-    
+
     /**
      * 恢复作业.
      */
@@ -143,20 +148,24 @@ public class JobScheduleController {
             throw new JobSystemException(ex);
         }
     }
-    
+
     /**
      * 立刻启动作业.
      */
     public void triggerJob() {
         try {
             if (!scheduler.isShutdown()) {
+
+                if (!scheduler.checkExists(jobDetail.getKey())) {
+                    scheduler.scheduleJob(jobDetail,createAtOnceTrigger());
+                }
                 scheduler.triggerJob(jobDetail.getKey());
             }
         } catch (final SchedulerException ex) {
             throw new JobSystemException(ex);
         }
     }
-    
+
     /**
      * 关闭调度器.
      */

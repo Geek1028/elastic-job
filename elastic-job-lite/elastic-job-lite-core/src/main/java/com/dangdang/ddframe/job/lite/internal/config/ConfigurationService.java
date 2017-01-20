@@ -20,27 +20,28 @@ package com.dangdang.ddframe.job.lite.internal.config;
 import com.dangdang.ddframe.job.exception.JobConfigurationException;
 import com.dangdang.ddframe.job.exception.JobExecutionEnvironmentException;
 import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
+import com.dangdang.ddframe.job.lite.internal.guarantee.GuaranteeNode;
 import com.dangdang.ddframe.job.lite.internal.storage.JobNodeStorage;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.google.common.base.Optional;
 
 /**
  * 弹性化分布式作业配置服务.
- * 
+ *
  * @author zhangliang
  * @author caohao
  */
 public class ConfigurationService {
-    
+
     private final JobNodeStorage jobNodeStorage;
-    
+
     public ConfigurationService(final CoordinatorRegistryCenter regCenter, final String jobName) {
         jobNodeStorage = new JobNodeStorage(regCenter, jobName);
     }
-    
+
     /**
      * 读取作业配置.
-     * 
+     *
      * @param fromCache 是否从缓存中读取
      * @return 作业配置
      */
@@ -56,27 +57,35 @@ public class ConfigurationService {
         }
         return LiteJobConfigurationGsonFactory.fromJson(result);
     }
-    
+
     /**
      * 持久化分布式作业配置信息.
-     * 
+     *
      * @param liteJobConfig 作业配置
      */
     public void persist(final LiteJobConfiguration liteJobConfig) {
         checkConflictJob(liteJobConfig);
         if (!jobNodeStorage.isJobNodeExisted(ConfigurationNode.ROOT) || liteJobConfig.isOverwrite()) {
+            LiteJobConfiguration liteJobConfiguration = load(false);
+            if (liteJobConfiguration != null) {
+                if (!liteJobConfiguration.getTypeConfig().getCoreConfig().getCron().equals(liteJobConfig.getTypeConfig().getCoreConfig().getCron())) {
+                    //删除started 等
+                    jobNodeStorage.removeJobNodeIfExisted(GuaranteeNode.STARTED_ROOT);
+                    jobNodeStorage.removeJobNodeIfExisted(GuaranteeNode.COMPLETED_ROOT);
+                }
+            }
             jobNodeStorage.replaceJobNode(ConfigurationNode.ROOT, LiteJobConfigurationGsonFactory.toJson(liteJobConfig));
         }
     }
-    
+
     private void checkConflictJob(final LiteJobConfiguration liteJobConfig) {
         Optional<LiteJobConfiguration> liteJobConfigFromZk = find();
         if (liteJobConfigFromZk.isPresent() && !liteJobConfigFromZk.get().getTypeConfig().getJobClass().equals(liteJobConfig.getTypeConfig().getJobClass())) {
-            throw new JobConfigurationException("Job conflict with register center. The job '%s' in register center's class is '%s', your job class is '%s'", 
+            throw new JobConfigurationException("Job conflict with register center. The job '%s' in register center's class is '%s', your job class is '%s'",
                     liteJobConfig.getJobName(), liteJobConfigFromZk.get().getTypeConfig().getJobClass(), liteJobConfig.getTypeConfig().getJobClass());
         }
     }
-    
+
     private Optional<LiteJobConfiguration> find() {
         if (!jobNodeStorage.isJobNodeExisted(ConfigurationNode.ROOT)) {
             return Optional.absent();
@@ -88,10 +97,10 @@ public class ConfigurationService {
         }
         return Optional.fromNullable(result);
     }
-    
+
     /**
      * 检查本机与注册中心的时间误差秒数是否在允许范围.
-     * 
+     *
      * @throws JobExecutionEnvironmentException 本机与注册中心的时间误差秒数不在允许范围所抛出的异常
      */
     public void checkMaxTimeDiffSecondsTolerable() throws JobExecutionEnvironmentException {

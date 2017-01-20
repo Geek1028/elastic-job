@@ -22,6 +22,9 @@ import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 import org.apache.curator.framework.state.ConnectionStateListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 作业注册中心的监听器管理者的抽象类.
  * 
@@ -30,21 +33,42 @@ import org.apache.curator.framework.state.ConnectionStateListener;
 public abstract class AbstractListenerManager {
     
     private final JobNodeStorage jobNodeStorage;
-    
+
+    private List<ConnectionStateListener> connectionStateListeners;
+    private List<TreeCacheListener> treeCacheListeners;
+
     protected AbstractListenerManager(final CoordinatorRegistryCenter regCenter, final String jobName) {
         jobNodeStorage = new JobNodeStorage(regCenter, jobName);
+        connectionStateListeners = new ArrayList<ConnectionStateListener>();
+        treeCacheListeners = new ArrayList<TreeCacheListener>();
     }
 
     /**
      * 开启监听器.
      */
     public abstract void start();
+
+    public void close() {
+        if (null != treeCacheListeners && treeCacheListeners.size() > 0) {
+            for (TreeCacheListener treeCacheListener : treeCacheListeners) {
+                jobNodeStorage.removeDataListener(treeCacheListener);
+            }
+        }
+
+        if (null != connectionStateListeners && connectionStateListeners.size() > 0) {
+            for (ConnectionStateListener connectionStateListener : connectionStateListeners) {
+                jobNodeStorage.removeConnectionStateListener(connectionStateListener);
+            }
+        }
+    }
     
     protected void addDataListener(final TreeCacheListener listener) {
+        treeCacheListeners.add(listener);
         jobNodeStorage.addDataListener(listener);
     }
     
     protected void addConnectionStateListener(final ConnectionStateListener listener) {
+        connectionStateListeners.add(listener);
         jobNodeStorage.addConnectionStateListener(listener);
     }
 }

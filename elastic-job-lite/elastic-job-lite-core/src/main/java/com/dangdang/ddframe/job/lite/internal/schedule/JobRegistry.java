@@ -71,4 +71,14 @@ public final class JobRegistry {
     public JobScheduleController getJobScheduleController(final String jobName) {
         return schedulerMap.get(jobName);
     }
+
+    /**
+     * 移除作业调度控制器.
+     *
+     * @param jobName 作业名称
+     * @return 作业调度控制器
+     */
+    public JobScheduleController removeJobScheduleController(final String jobName){
+        return schedulerMap.remove(jobName);
+    }
 }

@@ -45,7 +45,22 @@ public class CloudJobFacade implements JobFacade {
     private final JobConfigurationContext jobConfig;
     
     private final JobEventBus jobEventBus;
-    
+
+    @Override
+    public boolean isAllCompleted() {
+        return false;
+    }
+
+    @Override
+    public boolean isAllStarted() {
+        return false;
+    }
+
+    @Override
+    public void shutdown() {
+
+    }
+
     @Override
     public JobRootConfiguration loadJobRootConfiguration(final boolean fromCache) {
         return jobConfig;

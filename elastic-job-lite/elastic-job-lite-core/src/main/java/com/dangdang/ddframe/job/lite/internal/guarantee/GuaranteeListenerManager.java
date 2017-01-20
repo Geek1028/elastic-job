@@ -21,38 +21,49 @@ import com.dangdang.ddframe.job.lite.api.listener.AbstractDistributeOnceElasticJ
 import com.dangdang.ddframe.job.lite.api.listener.ElasticJobListener;
 import com.dangdang.ddframe.job.lite.internal.listener.AbstractJobListener;
 import com.dangdang.ddframe.job.lite.internal.listener.AbstractListenerManager;
+import com.dangdang.ddframe.job.lite.internal.schedule.JobRegistry;
+import com.dangdang.ddframe.job.lite.internal.schedule.JobScheduleController;
+import com.dangdang.ddframe.job.lite.internal.server.ServerService;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent.Type;
 
+import java.util.Date;
 import java.util.List;
 
 /**
  * 保证分布式任务全部开始和结束状态监听管理器.
- * 
+ *
  * @author zhangliang
  */
 public class GuaranteeListenerManager extends AbstractListenerManager {
-    
+
     private final GuaranteeNode guaranteeNode;
-    
+
     private final List<ElasticJobListener> elasticJobListeners;
-    
+
+    private final GuaranteeService guaranteeService;
+
+    private final ServerService serverService;
+
     public GuaranteeListenerManager(final CoordinatorRegistryCenter regCenter, final String jobName, final List<ElasticJobListener> elasticJobListeners) {
         super(regCenter, jobName);
         this.guaranteeNode = new GuaranteeNode(jobName);
         this.elasticJobListeners = elasticJobListeners;
+        this.guaranteeService = new GuaranteeService(regCenter, jobName);
+        this.serverService = new ServerService(regCenter, jobName);
     }
-    
+
     @Override
     public void start() {
         addDataListener(new StartedNodeRemovedJobListener());
         addDataListener(new CompletedNodeRemovedJobListener());
+        addDataListener(new CompletedNodeAddedJobListener());
     }
-    
+
     class StartedNodeRemovedJobListener extends AbstractJobListener {
-        
+
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
             if (Type.NODE_REMOVED == event.getType() && guaranteeNode.isStartedRootNode(path)) {
@@ -64,9 +75,9 @@ public class GuaranteeListenerManager extends AbstractListenerManager {
             }
         }
     }
-    
+
     class CompletedNodeRemovedJobListener extends AbstractJobListener {
-        
+
         @Override
         protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
             if (Type.NODE_REMOVED == event.getType() && guaranteeNode.isCompletedRootNode(path)) {
@@ -78,4 +89,30 @@ public class GuaranteeListenerManager extends AbstractListenerManager {
             }
         }
     }
+
+    class CompletedNodeAddedJobListener extends AbstractJobListener {
+
+        @Override
+        protected void dataChanged(final CuratorFramework client, final TreeCacheEvent event, final String path) {
+
+            if (Type.NODE_ADDED == event.getType() && guaranteeNode.isCompletedNode(path)) {
+                if (guaranteeService.isAllCompleted()) {
+                    String jobName = guaranteeService.getConfigService().load(true).getJobName();
+                    JobScheduleController jobScheduleController = JobRegistry.getInstance().getJobScheduleController(jobName);
+                    if (null != jobScheduleController) {
+                        Date nextFireTime = jobScheduleController.getNextFireTime();
+                        //定时任务执行完毕，则关闭之
+                        if (null == nextFireTime) {
+                            jobScheduleController.shutdown();
+                            serverService.processServerShutdown();
+                        } else {
+                            guaranteeService.clearAllStartedInfo();
+                            guaranteeService.clearAllCompletedInfo();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }

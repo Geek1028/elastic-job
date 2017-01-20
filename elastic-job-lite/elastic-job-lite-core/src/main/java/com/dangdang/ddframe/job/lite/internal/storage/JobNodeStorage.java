@@ -20,6 +20,7 @@ package com.dangdang.ddframe.job.lite.internal.storage;
 import com.dangdang.ddframe.job.exception.JobSystemException;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.exception.RegExceptionHandler;
+import lombok.Getter;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.framework.recipes.cache.TreeCache;
@@ -39,7 +40,8 @@ import java.util.List;
  * @author zhangliang
  */
 public class JobNodeStorage {
-    
+
+    @Getter
     private final CoordinatorRegistryCenter regCenter;
     
     private final String jobName;
@@ -51,7 +53,7 @@ public class JobNodeStorage {
         this.jobName = jobName;
         jobNodePath = new JobNodePath(jobName);
     }
-    
+
     /**
      * 判断作业节点是否存在.
      * 
@@ -209,6 +211,13 @@ public class JobNodeStorage {
     public void addConnectionStateListener(final ConnectionStateListener listener) {
         getClient().getConnectionStateListenable().addListener(listener);
     }
+
+    /**
+     * 称除连接状态监听器.
+     */
+    public void removeConnectionStateListener(final ConnectionStateListener listener) {
+        getClient().getConnectionStateListenable().removeListener(listener);
+    }
     
     private CuratorFramework getClient() {
         return (CuratorFramework) regCenter.getRawClient();
@@ -221,7 +230,16 @@ public class JobNodeStorage {
         TreeCache cache = (TreeCache) regCenter.getRawCache("/" + jobName);
         cache.getListenable().addListener(listener);
     }
-    
+
+    /**
+     * 移除数据监听器.
+     * @param listener
+     */
+    public void removeDataListener(final TreeCacheListener listener){
+        TreeCache cache = (TreeCache) regCenter.getRawCache("/" + jobName);
+        cache.getListenable().removeListener(listener);
+    }
+
     /**
      * 获取注册中心当前时间.
      * 

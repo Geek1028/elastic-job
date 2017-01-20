@@ -30,6 +30,12 @@ import java.util.Collection;
  * @author zhangliang
  */
 public interface JobFacade {
+
+    boolean isAllCompleted();
+
+    boolean isAllStarted();
+
+    void shutdown();
     
     /**
      * 读取作业配置.

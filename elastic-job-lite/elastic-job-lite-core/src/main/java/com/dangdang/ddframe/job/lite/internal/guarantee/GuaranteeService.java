@@ -20,28 +20,31 @@ package com.dangdang.ddframe.job.lite.internal.guarantee;
 import com.dangdang.ddframe.job.lite.internal.config.ConfigurationService;
 import com.dangdang.ddframe.job.lite.internal.storage.JobNodeStorage;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
+import lombok.Getter;
 
 import java.util.Collection;
 
 /**
  * 保证分布式任务全部开始和结束状态的服务.
- * 
+ *
  * @author zhangliang
  */
 public class GuaranteeService {
-    
+
+    @Getter
     private final JobNodeStorage jobNodeStorage;
-    
+
+    @Getter
     private final ConfigurationService configService;
-    
+
     public GuaranteeService(final CoordinatorRegistryCenter regCenter, final String jobName) {
         jobNodeStorage = new JobNodeStorage(regCenter, jobName);
         configService = new ConfigurationService(regCenter, jobName);
     }
-    
+
     /**
      * 根据分片项注册任务开始运行.
-     * 
+     *
      * @param shardingItems 待注册的分片项
      */
     public void registerStart(final Collection<Integer> shardingItems) {
@@ -49,7 +52,7 @@ public class GuaranteeService {
             jobNodeStorage.createJobNodeIfNeeded(GuaranteeNode.getStartedNode(each));
         }
     }
-    
+
     /**
      * 判断是否所有的任务均启动完毕.
      *
@@ -59,14 +62,14 @@ public class GuaranteeService {
         return jobNodeStorage.isJobNodeExisted(GuaranteeNode.STARTED_ROOT)
                 && configService.load(false).getTypeConfig().getCoreConfig().getShardingTotalCount() == jobNodeStorage.getJobNodeChildrenKeys(GuaranteeNode.STARTED_ROOT).size();
     }
-    
+
     /**
      * 清理所有任务启动信息.
      */
     public void clearAllStartedInfo() {
         jobNodeStorage.removeJobNodeIfExisted(GuaranteeNode.STARTED_ROOT);
     }
-    
+
     /**
      * 根据分片项注册任务完成运行.
      *
@@ -77,7 +80,7 @@ public class GuaranteeService {
             jobNodeStorage.createJobNodeIfNeeded(GuaranteeNode.getCompletedNode(each));
         }
     }
-    
+
     /**
      * 判断是否所有的任务均执行完毕.
      *
@@ -87,7 +90,7 @@ public class GuaranteeService {
         return jobNodeStorage.isJobNodeExisted(GuaranteeNode.COMPLETED_ROOT)
                 && configService.load(false).getTypeConfig().getCoreConfig().getShardingTotalCount() <= jobNodeStorage.getJobNodeChildrenKeys(GuaranteeNode.COMPLETED_ROOT).size();
     }
-    
+
     /**
      * 清理所有任务启动信息.
      */

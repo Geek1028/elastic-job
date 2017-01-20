@@ -72,6 +72,16 @@ public class ListenerManager {
         configurationListenerManager.start();
         guaranteeListenerManager.start();
     }
+
+    public void closeAllListeners(){
+        electionListenerManager.close();
+        shardingListenerManager.close();
+        executionListenerManager.close();
+        failoverListenerManager.close();
+        jobOperationListenerManager.close();
+        configurationListenerManager.close();
+        guaranteeListenerManager.close();
+    }
     
     /**
      * 设置当前分片总数.

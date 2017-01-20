@@ -29,9 +29,9 @@ public final class GuaranteeNode {
     
     static final String ROOT = "guarantee";
     
-    static final String STARTED_ROOT = ROOT + "/started";
+    public static final String STARTED_ROOT = ROOT + "/started";
     
-    static final String COMPLETED_ROOT = ROOT + "/completed";
+    public static final String COMPLETED_ROOT = ROOT + "/completed";
     
     private final JobNodePath jobNodePath;
     
@@ -50,8 +50,17 @@ public final class GuaranteeNode {
     boolean isStartedRootNode(final String path) {
         return jobNodePath.getFullPath(STARTED_ROOT).equals(path);
     }
+
+    boolean isStartedNode(final String path) {
+        return path.startsWith(Joiner.on("/").join(jobNodePath.getFullPath(STARTED_ROOT), ""));
+    }
     
     boolean isCompletedRootNode(final String path) {
         return jobNodePath.getFullPath(COMPLETED_ROOT).equals(path);
     }
+
+    boolean isCompletedNode(final String path) {
+        return path.startsWith(Joiner.on("/").join(jobNodePath.getFullPath(COMPLETED_ROOT),""));
+    }
+
 }

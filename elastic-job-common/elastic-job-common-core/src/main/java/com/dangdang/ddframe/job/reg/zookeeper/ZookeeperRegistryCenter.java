@@ -322,6 +322,15 @@ public class ZookeeperRegistryCenter implements CoordinatorRegistryCenter {
         }
         caches.put(cachePath + "/", cache);
     }
+
+    @Override
+    public void removeCacheData(final String cachePath) {
+        TreeCache cache = (TreeCache) this.getRawCache(cachePath);
+        if (null != cache) {
+            cache.close();
+        }
+        caches.remove(cachePath + "/");
+    }
     
     @Override
     public Object getRawCache(final String cachePath) {
