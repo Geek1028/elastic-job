@@ -45,50 +45,50 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public final class JobSchedulerTest {
-    
+
     @Mock
     private CoordinatorRegistryCenter regCenter;
-    
+
     @Mock
     private JobExecutor jobExecutor;
-    
+
     @Mock
     private SchedulerFacade schedulerFacade;
-    
+
     @Mock
     private ElasticJobListenerCaller caller;
-    
+
     private final LiteJobConfiguration liteJobConfig = JobConfigurationUtil.createSimpleLiteJobConfiguration();
-    
+
     private JobScheduler jobScheduler = new JobScheduler(regCenter, liteJobConfig);
-    
+
     @Before
     public void initMocks() throws NoSuchFieldException {
         MockitoAnnotations.initMocks(this);
         ReflectionUtils.setFieldValue(jobScheduler, "jobExecutor", jobExecutor);
         when(jobExecutor.getSchedulerFacade()).thenReturn(schedulerFacade);
     }
-    
+
     @Test
     public void assertInitIfIsMisfire() throws NoSuchFieldException, SchedulerException {
         mockInit(true);
         jobScheduler.init();
         assertInit();
     }
-    
+
     @Test
     public void assertInitIfIsNotMisfire() throws NoSuchFieldException, SchedulerException {
         mockInit(false);
         jobScheduler.init();
         assertInit();
     }
-    
+
     private void mockInit(final boolean isMisfire) {
         when(schedulerFacade.newJobTriggerListener()).thenReturn(new JobTriggerListener(null, null));
         when(schedulerFacade.loadJobConfiguration()).thenReturn(LiteJobConfiguration.newBuilder(
                 new SimpleJobConfiguration(JobCoreConfiguration.newBuilder("test_job", "* * 0/10 * * ? 2050", 3).misfire(isMisfire).build(), TestSimpleJob.class.getCanonicalName())).build());
     }
-    
+
     private void assertInit() throws NoSuchFieldException, SchedulerException {
         verify(jobExecutor).init();
         Scheduler scheduler = ReflectionUtils.getFieldValue(JobRegistry.getInstance().getJobScheduleController("test_job"), JobScheduleController.class.getDeclaredField("scheduler"));
@@ -97,7 +97,7 @@ public final class JobSchedulerTest {
         assertTrue(scheduler.isStarted());
         verify(schedulerFacade).newJobTriggerListener();
     }
-    
+
     @Test
     public void assertShutdown() {
         mockInit(true);

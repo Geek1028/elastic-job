@@ -65,7 +65,7 @@ public final class JobNodePath {
     private static final String EXECUTION_NODE = "execution";
     
     private final String jobName;
-    
+
     /**
      * 获取节点全路径.
      * 

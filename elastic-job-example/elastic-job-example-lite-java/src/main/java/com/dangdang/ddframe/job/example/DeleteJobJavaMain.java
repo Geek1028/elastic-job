@@ -17,7 +17,6 @@
 
 package com.dangdang.ddframe.job.example;
 
-import com.dangdang.ddframe.job.lite.internal.storage.JobNodeStorage;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
@@ -47,10 +46,6 @@ public final class DeleteJobJavaMain {
             if (regCenter.isExisted("/jobCreateConfig/" + str)) {
                 regCenter.remove("/jobCreateConfig/" + str);
             }
-
-//            if (regCenter.isExisted("/" + str)) {
-//                regCenter.remove("/" + str);
-//            }
         }
     }
 

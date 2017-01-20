@@ -95,7 +95,7 @@ public abstract class AbstractElasticJobExecutor {
      * 执行作业.
      */
     public final void execute() {
-        if (jobFacade.isAllStarted() || jobFacade.isAllCompleted()) {
+        if (jobFacade.isAllCompleted()) {
             jobFacade.shutdown();
             return;
         }

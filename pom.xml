@@ -583,7 +583,7 @@
         </plugins>
     </reporting>
     
-    <repositories>
+    <!--  <repositories>
         <repository>
             <id>alfresco-maven-repo</id>
             <url>https://maven.alfresco.com/nexus/content/groups/public/</url>
@@ -608,7 +608,7 @@
                 <enabled>false</enabled>
             </releases>
         </repository>
-    </repositories>
+    </repositories>-->
     
     <url>https://github.com/dangdangdotcom/elastic-job</url>
     <licenses> 

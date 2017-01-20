@@ -37,27 +37,27 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.verify;
 
 public final class JobExecutorTest {
-    
+
     @Mock
     private CoordinatorRegistryCenter regCenter;
-    
+
     @Mock
     private SchedulerFacade schedulerFacade;
-    
+
     @Mock
     private ElasticJobListenerCaller caller;
-    
+
     private final LiteJobConfiguration liteJobConfig = JobConfigurationUtil.createSimpleLiteJobConfiguration();
-    
+
     private JobExecutor jobExecutor = new JobExecutor(regCenter, liteJobConfig);
-    
+
     @Before
     public void initMocks() throws NoSuchFieldException {
         MockitoAnnotations.initMocks(this);
         ReflectionUtils.setFieldValue(jobExecutor, "regCenter", regCenter);
         ReflectionUtils.setFieldValue(jobExecutor, "schedulerFacade", schedulerFacade);
     }
-    
+
     @Test
     public void assertNew() throws NoSuchFieldException {
         TestDistributeOnceElasticJobListener testDistributeOnceElasticJobListener = new TestDistributeOnceElasticJobListener(caller);
@@ -65,7 +65,7 @@ public final class JobExecutorTest {
         new JobExecutor(null, liteJobConfig, new TestElasticJobListener(caller), testDistributeOnceElasticJobListener);
         assertNotNull(ReflectionUtils.getFieldValue(testDistributeOnceElasticJobListener, ReflectionUtils.getFieldWithName(AbstractDistributeOnceElasticJobListener.class, "guaranteeService", false)));
     }
-    
+
     @Test
     public void assertInit() throws NoSuchFieldException, SchedulerException {
         jobExecutor.init();

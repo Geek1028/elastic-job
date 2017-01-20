@@ -91,7 +91,7 @@ import org.junit.runners.Suite.SuiteClasses;
     GuaranteeNodeTest.class,
     GuaranteeServiceTest.class, 
     SchedulerFacadeTest.class,
-    LiteJobFacadeTest.class, 
+    LiteJobFacadeTest.class,
     JobExecutorTest.class
     })
 public final class AllInternalTests {

@@ -40,7 +40,8 @@ public final class CreateJobJavaMain {
         int index = 0;
         while (true) {
             String jobName = "test" + index;
-            String config = "{\"jobName\":\"" + jobName + "\",\"jobClass\":\"com.dangdang.ddframe.job.example.job.simple.JavaSimpleJob\",\"jobType\":\"SIMPLE\",\"cron\":\"0 39 10 30 1 ? 2017\",\"shardingTotalCount\":3,\"shardingItemParameters\":\"0\\u003dBeijing,1\\u003dShanghai,2\\u003dGuangzhou\",\"jobParameter\":\"\",\"failover\":true,\"misfire\":true,\"description\":\"\",\"jobProperties\":{\"job_exception_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultJobExceptionHandler\",\"executor_service_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultExecutorServiceHandler\"},\"monitorExecution\":true,\"maxTimeDiffSeconds\":-1,\"monitorPort\":-1,\"jobShardingStrategyClass\":\"\",\"disabled\":false,\"overwrite\":true}";
+            String cron = index + " 12 16 20 1 ? 2017";
+            String config = "{\"jobName\":\"" + jobName + "\",\"jobClass\":\"com.dangdang.ddframe.job.example.job.simple.JavaSimpleJob\",\"jobType\":\"SIMPLE\",\"cron\":\"" + cron + "\",\"shardingTotalCount\":3,\"shardingItemParameters\":\"0\\u003dBeijing,1\\u003dShanghai,2\\u003dGuangzhou\",\"jobParameter\":\"\",\"failover\":true,\"misfire\":true,\"description\":\"\",\"jobProperties\":{\"job_exception_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultJobExceptionHandler\",\"executor_service_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultExecutorServiceHandler\"},\"monitorExecution\":true,\"maxTimeDiffSeconds\":-1,\"monitorPort\":-1,\"jobShardingStrategyClass\":\"\",\"disabled\":false,\"overwrite\":true}";
             System.out.println(config);
 
             JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, "jobCreateConfig");
@@ -53,6 +54,9 @@ public final class CreateJobJavaMain {
                 e.printStackTrace();
             }
             index++;
+            if (index >= 60) {
+                break;
+            }
         }
 
 

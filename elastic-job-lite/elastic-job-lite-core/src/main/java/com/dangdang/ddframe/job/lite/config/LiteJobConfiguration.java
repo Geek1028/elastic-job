@@ -90,7 +90,7 @@ public class LiteJobConfiguration implements JobRootConfiguration {
         private String jobShardingStrategyClass = "";
         
         private boolean disabled;
-        
+
         private boolean overwrite;
         
         /**
