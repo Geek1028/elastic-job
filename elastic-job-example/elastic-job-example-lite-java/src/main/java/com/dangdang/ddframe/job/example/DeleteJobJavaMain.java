@@ -20,25 +20,22 @@ package com.dangdang.ddframe.job.example;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.dangdang.ddframe.job.example.CommonConfig.*;
+
 @Slf4j
 public final class DeleteJobJavaMain {
-
-    private static final int EMBED_ZOOKEEPER_PORT = 2181;
-
-    private static final String ZOOKEEPER_CONNECTION_STRING = "10.64.7.106:" + EMBED_ZOOKEEPER_PORT;
-
-    private static final String JOB_NAMESPACE = "elastic-job-example-lite-java";
 
     public static void main(String[] args) {
 
 
         CoordinatorRegistryCenter regCenter = setUpRegistryCenter();
 
-        List<String> list = regCenter.getChildrenKeys("/jobCreateConfig");
+        List<String> list = regCenter.getChildrenKeys("/"+jobCreateConfigNode);
 
         for (String str : list) {
             System.out.println("delete  " + str);
@@ -52,6 +49,10 @@ public final class DeleteJobJavaMain {
 
     private static CoordinatorRegistryCenter setUpRegistryCenter() {
         ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(ZOOKEEPER_CONNECTION_STRING, JOB_NAMESPACE);
+        Optional<String> optional = Optional.fromNullable(digest);
+        if (optional.isPresent()) {
+            zkConfig.setDigest(digest);
+        }
         CoordinatorRegistryCenter result = new ZookeeperRegistryCenter(zkConfig);
         result.init();
         return result;

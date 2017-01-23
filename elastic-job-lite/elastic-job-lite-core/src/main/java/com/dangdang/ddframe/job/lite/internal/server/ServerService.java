@@ -64,6 +64,17 @@ public class ServerService {
         jobNodeStorage.fillEphemeralJobNode(ServerNode.getStatusNode(localHostService.getIp()), ServerStatus.READY);
         jobNodeStorage.removeJobNodeIfExisted(ServerNode.getShutdownNode(localHostService.getIp()));
     }
+
+    public void persistServerCompleted(final boolean enabled) {
+        jobNodeStorage.fillJobNode(ServerNode.getHostNameNode(localHostService.getIp()), localHostService.getHostName());
+        if (enabled) {
+            jobNodeStorage.removeJobNodeIfExisted(ServerNode.getDisabledNode(localHostService.getIp()));
+        } else {
+            jobNodeStorage.fillJobNode(ServerNode.getDisabledNode(localHostService.getIp()), "");
+        }
+        jobNodeStorage.fillEphemeralJobNode(ServerNode.getStatusNode(localHostService.getIp()), ServerStatus.COMPLETED);
+        jobNodeStorage.removeJobNodeIfExisted(ServerNode.getShutdownNode(localHostService.getIp()));
+    }
     
     /**
      * 清除立刻执行作业的标记.

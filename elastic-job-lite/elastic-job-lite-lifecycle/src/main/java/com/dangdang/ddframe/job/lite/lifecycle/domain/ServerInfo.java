@@ -56,7 +56,8 @@ public final class ServerInfo implements Serializable {
         DISABLED,
         PAUSED, 
         CRASHED, 
-        SHUTDOWN;
+        SHUTDOWN,
+        COMPLETED;
     
         /**
          * 获取作业服务器状态.

@@ -24,5 +24,6 @@ package com.dangdang.ddframe.job.lite.internal.server;
  */
 public enum ServerStatus {
     READY,
-    RUNNING
+    RUNNING,
+    COMPLETED
 }

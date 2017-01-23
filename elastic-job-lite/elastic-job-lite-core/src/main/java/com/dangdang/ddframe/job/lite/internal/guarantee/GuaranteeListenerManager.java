@@ -104,7 +104,8 @@ public class GuaranteeListenerManager extends AbstractListenerManager {
                         //定时任务执行完毕，则关闭之
                         if (null == nextFireTime) {
                             jobScheduleController.shutdown();
-                            serverService.processServerShutdown();
+                            //交服务器状态改为COMPELETED
+                            serverService.persistServerCompleted(true);
                         } else {
                             guaranteeService.clearAllStartedInfo();
                             guaranteeService.clearAllCompletedInfo();

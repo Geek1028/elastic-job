@@ -22,17 +22,29 @@ import com.dangdang.ddframe.job.api.simple.SimpleJob;
 import com.dangdang.ddframe.job.example.fixture.entity.Foo;
 import com.dangdang.ddframe.job.example.fixture.repository.FooRepository;
 import com.dangdang.ddframe.job.example.fixture.repository.FooRepositoryFactory;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Base64Utils;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 
 public class JavaSimpleJob implements SimpleJob {
-    
+
     private FooRepository fooRepository = FooRepositoryFactory.getFooRepository();
-    
+
     @Override
     public void execute(final ShardingContext shardingContext) {
-        System.out.println(String.format("------Thread ID: %s, Date: %s, Sharding Context: %s, Action: %s", Thread.currentThread().getId(), new Date(), shardingContext, "simple job"));
+        String shardingParameter = shardingContext.getShardingParameter();
+        if (!StringUtils.isBlank(shardingParameter)) {
+            try {
+                shardingParameter = new String(Base64Utils.decodeFromString(shardingParameter), "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println(String.format("------Thread ID: %s, Date: %s, Sharding Context: %s, Action: %s, shardingParameter: %s", Thread.currentThread().getId(), new Date(), shardingContext, "simple job", shardingParameter));
+
         List<Foo> data = fooRepository.findTodoData(shardingContext.getShardingParameter(), 10);
         for (Foo each : data) {
             fooRepository.setCompleted(each.getId());

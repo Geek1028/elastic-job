@@ -97,7 +97,7 @@ public class LiteJobFacade implements JobFacade {
         String jobName = guaranteeService.getConfigService().load(true).getJobName();
         JobScheduleController jobScheduleController = JobRegistry.getInstance().getJobScheduleController(jobName);
         jobScheduleController.shutdown();
-        serverService.processServerShutdown();
+        serverService.persistServerCompleted(true);
     }
 
     @Override

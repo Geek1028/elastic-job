@@ -29,45 +29,39 @@ import com.dangdang.ddframe.job.lite.config.LiteJobConfiguration;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 
 import javax.sql.DataSource;
 
+import static com.dangdang.ddframe.job.example.CommonConfig.*;
+
 @Slf4j
 public final class JavaMain {
 
-    private static final int EMBED_ZOOKEEPER_PORT = 2181;
-
-    private static final String ZOOKEEPER_CONNECTION_STRING = "10.64.7.106:" + EMBED_ZOOKEEPER_PORT;
-
-    private static final String JOB_NAMESPACE = "elastic-job-example-lite-java";
-
-    private static final String EVENT_RDB_STORAGE_DRIVER = "org.h2.Driver";
-
-    private static final String EVENT_RDB_STORAGE_URL = "jdbc:h2:mem:job_event_storage";
-
-    private static final String EVENT_RDB_STORAGE_USERNAME = "sa";
-
-    private static final String EVENT_RDB_STORAGE_PASSWORD = "";
-
     public static void main(String[] args) {
+        System.out.println(JavaSimpleJob.class.getCanonicalName());
 
-        String cron = "0 47 16 20 1 ? 2017";
-
-        if (args != null && args.length > 0) {
-            cron = args[0];
-        }
-
-        CoordinatorRegistryCenter regCenter = setUpRegistryCenter();
-        JobEventConfiguration jobEventConfig = new JobEventRdbConfiguration(setUpEventTraceDataSource());
-
-        setUpSimpleJob("test123", regCenter, jobEventConfig, cron);
+//        String cron = "0 47 16 20 1 ? 2017";
+//
+//        if (args != null && args.length > 0) {
+//            cron = args[0];
+//        }
+//
+//        CoordinatorRegistryCenter regCenter = setUpRegistryCenter();
+//        JobEventConfiguration jobEventConfig = new JobEventRdbConfiguration(setUpEventTraceDataSource());
+//
+//        setUpSimpleJob("test123", regCenter, jobEventConfig, cron);
 
     }
 
     private static CoordinatorRegistryCenter setUpRegistryCenter() {
         ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(ZOOKEEPER_CONNECTION_STRING, JOB_NAMESPACE);
+        Optional<String> optional = Optional.fromNullable(digest);
+        if (optional.isPresent()) {
+            zkConfig.setDigest(digest);
+        }
         CoordinatorRegistryCenter result = new ZookeeperRegistryCenter(zkConfig);
         result.init();
         return result;

@@ -17,11 +17,8 @@
 
 package com.dangdang.ddframe.job.example;
 
-import com.dangdang.ddframe.job.config.JobCoreConfiguration;
-import com.dangdang.ddframe.job.config.simple.SimpleJobConfiguration;
 import com.dangdang.ddframe.job.event.JobEventConfiguration;
 import com.dangdang.ddframe.job.event.rdb.JobEventRdbConfiguration;
-import com.dangdang.ddframe.job.example.job.simple.JavaSimpleJob;
 import com.dangdang.ddframe.job.example.listener.JavaSimpleDistributeListener;
 import com.dangdang.ddframe.job.example.listener.JavaSimpleListener;
 import com.dangdang.ddframe.job.lite.api.JobScheduler;
@@ -35,6 +32,7 @@ import com.dangdang.ddframe.job.lite.internal.server.ServerService;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.lang3.StringUtils;
@@ -43,38 +41,17 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 
 import javax.sql.DataSource;
 
+import static com.dangdang.ddframe.job.example.CommonConfig.*;
+
 @Slf4j
 public final class AutoJobJavaMain {
-
-    private static final int EMBED_ZOOKEEPER_PORT = 2181;
-
-    private static final String ZOOKEEPER_CONNECTION_STRING = "10.64.7.106:" + EMBED_ZOOKEEPER_PORT;
-
-    private static final String JOB_NAMESPACE = "elastic-job-example-lite-java";
-
-    // switch to MySQL by yourself
-//    private static final String EVENT_RDB_STORAGE_DRIVER = "com.mysql.jdbc.Driver";
-//    private static final String EVENT_RDB_STORAGE_URL = "jdbc:mysql://localhost:3306/elastic_job_log";
-
-    private static final String EVENT_RDB_STORAGE_DRIVER = "org.h2.Driver";
-
-    private static final String EVENT_RDB_STORAGE_URL = "jdbc:h2:mem:job_event_storage";
-
-    private static final String EVENT_RDB_STORAGE_USERNAME = "sa";
-
-    private static final String EVENT_RDB_STORAGE_PASSWORD = "";
-
-    private static final String cron = "0 41 20 19 1 ? 2017";
 
     public static void main(String[] args) {
 
         CoordinatorRegistryCenter regCenter = setUpRegistryCenter();
         JobEventConfiguration jobEventConfig = new JobEventRdbConfiguration(setUpEventTraceDataSource());
 
-//        setUpSimpleJob("test", regCenter, jobEventConfig, cron);
-
-        new JobModifyListenerManager(regCenter, jobEventConfig, "jobCreateConfig").start();
-//        new JobDeleteListenerManager(regCenter, jobEventConfig, "jobCreateConfig").start();
+        new JobModifyListenerManager(regCenter, jobEventConfig, jobCreateConfigNode).start();
         while (true) {
             try {
                 Thread.sleep(1000l);
@@ -145,6 +122,14 @@ public final class AutoJobJavaMain {
                         } else {
                             log.info("time scheduling task does not exist:" + jobName);
                         }
+
+                        if (regCenter.isExisted("/" + jobName)) {
+                            log.info("delete job node:" + jobName);
+                            regCenter.remove("/" + jobName);
+                        } else {
+                            log.info("job node does not exist:" + jobName);
+                        }
+
                     }
                 }
             }
@@ -158,6 +143,10 @@ public final class AutoJobJavaMain {
 
     private static CoordinatorRegistryCenter setUpRegistryCenter() {
         ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(ZOOKEEPER_CONNECTION_STRING, JOB_NAMESPACE);
+        Optional<String> optional = Optional.fromNullable(digest);
+        if (optional.isPresent()) {
+            zkConfig.setDigest(digest);
+        }
         CoordinatorRegistryCenter result = new ZookeeperRegistryCenter(zkConfig);
         result.init();
         return result;
@@ -170,12 +159,6 @@ public final class AutoJobJavaMain {
         result.setUsername(EVENT_RDB_STORAGE_USERNAME);
         result.setPassword(EVENT_RDB_STORAGE_PASSWORD);
         return result;
-    }
-
-    private static void setUpSimpleJob(final String jobName, final CoordinatorRegistryCenter regCenter, final JobEventConfiguration jobEventConfig, final String cron) {
-        JobCoreConfiguration coreConfig = JobCoreConfiguration.newBuilder(jobName, cron, 3).shardingItemParameters("0=Beijing,1=Shanghai,2=Guangzhou").failover(true).build();
-        SimpleJobConfiguration simpleJobConfig = new SimpleJobConfiguration(coreConfig, JavaSimpleJob.class.getCanonicalName());
-        new JobScheduler(regCenter, LiteJobConfiguration.newBuilder(simpleJobConfig).overwrite(true).build(), jobEventConfig, new JavaSimpleListener(), new JavaSimpleDistributeListener(1000L, 2000L)).init();
     }
 
     private static void setUpSimpleJob(final LiteJobConfiguration liteJobConfiguration, final CoordinatorRegistryCenter regCenter, final JobEventConfiguration jobEventConfig) {

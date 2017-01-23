@@ -21,16 +21,13 @@ import com.dangdang.ddframe.job.lite.internal.storage.JobNodeStorage;
 import com.dangdang.ddframe.job.reg.base.CoordinatorRegistryCenter;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperConfiguration;
 import com.dangdang.ddframe.job.reg.zookeeper.ZookeeperRegistryCenter;
+import com.google.common.base.Optional;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.dangdang.ddframe.job.example.CommonConfig.*;
 
 @Slf4j
 public final class CreateJobJavaMain {
-
-    private static final int EMBED_ZOOKEEPER_PORT = 2181;
-
-    private static final String ZOOKEEPER_CONNECTION_STRING = "10.64.7.106:" + EMBED_ZOOKEEPER_PORT;
-
-    private static final String JOB_NAMESPACE = "elastic-job-example-lite-java";
 
     public static void main(String[] args) {
 
@@ -44,7 +41,7 @@ public final class CreateJobJavaMain {
             String config = "{\"jobName\":\"" + jobName + "\",\"jobClass\":\"com.dangdang.ddframe.job.example.job.simple.JavaSimpleJob\",\"jobType\":\"SIMPLE\",\"cron\":\"" + cron + "\",\"shardingTotalCount\":3,\"shardingItemParameters\":\"0\\u003dBeijing,1\\u003dShanghai,2\\u003dGuangzhou\",\"jobParameter\":\"\",\"failover\":true,\"misfire\":true,\"description\":\"\",\"jobProperties\":{\"job_exception_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultJobExceptionHandler\",\"executor_service_handler\":\"com.dangdang.ddframe.job.executor.handler.impl.DefaultExecutorServiceHandler\"},\"monitorExecution\":true,\"maxTimeDiffSeconds\":-1,\"monitorPort\":-1,\"jobShardingStrategyClass\":\"\",\"disabled\":false,\"overwrite\":true}";
             System.out.println(config);
 
-            JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, "jobCreateConfig");
+            JobNodeStorage jobNodeStorage = new JobNodeStorage(regCenter, jobCreateConfigNode);
 
             jobNodeStorage.createJobNodeIfNeeded(jobName + "/config");
             jobNodeStorage.fillJobNode(jobName + "/config", config);
@@ -65,6 +62,10 @@ public final class CreateJobJavaMain {
 
     private static CoordinatorRegistryCenter setUpRegistryCenter() {
         ZookeeperConfiguration zkConfig = new ZookeeperConfiguration(ZOOKEEPER_CONNECTION_STRING, JOB_NAMESPACE);
+        Optional<String> optional = Optional.fromNullable(digest);
+        if (optional.isPresent()) {
+            zkConfig.setDigest(digest);
+        }
         CoordinatorRegistryCenter result = new ZookeeperRegistryCenter(zkConfig);
         result.init();
         return result;
