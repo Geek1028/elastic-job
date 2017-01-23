@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.*;
 
 /**
@@ -37,8 +39,18 @@ public class CoreRegistryCenterController {
     @RequestMapping(value = "create", method = RequestMethod.POST)
     @ResponseBody
     public Map createJob(@RequestBody @Valid final CreateJobMeta createJobMeta) throws UnsupportedEncodingException {
+        if (createJobMeta.getJobClass() == null) {
+            createJobMeta.setJobClass("com.ksyun.live.schedule.job.ElasticSimpleJob");
+        }
+        if (createJobMeta.getShardingTotalCount() == null) {
+            createJobMeta.setShardingTotalCount(1);
+        }
+        //decode
+        createJobMeta.setCallback_url(URLDecoder.decode(createJobMeta.getCallback_url(), "UTF-8"));
+
         log.info("createJob:" + createJobMeta.toString());
         Map<String, String> jobInfo = new HashMap<String, String>();
+
 
         RegistryCenterConfiguration registryCenterConfiguration = regCenterService.load(createJobMeta.getRegistryCenterName());
         if (null != registryCenterConfiguration) {
@@ -52,6 +64,9 @@ public class CoreRegistryCenterController {
                 }
                 jobName = UUID.randomUUID().toString();
             }
+
+            //再次encode
+            createJobMeta.setCallback_url(URLEncoder.encode(createJobMeta.getCallback_url(), "UTF-8"));
 
             String parameter = GsonFactory.getGson().toJson(createJobMeta);
             List<String> parameters = new ArrayList<String>();

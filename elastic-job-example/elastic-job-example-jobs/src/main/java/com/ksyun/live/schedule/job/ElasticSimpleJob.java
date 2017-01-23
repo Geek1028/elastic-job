@@ -15,7 +15,7 @@
  * </p>
  */
 
-package com.dangdang.ddframe.job.example.job.simple;
+package com.ksyun.live.schedule.job;
 
 import com.dangdang.ddframe.job.api.ShardingContext;
 import com.dangdang.ddframe.job.api.simple.SimpleJob;
@@ -40,11 +40,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Slf4j
-public class JavaSimpleJob implements SimpleJob {
+public class ElasticSimpleJob implements SimpleJob {
 
     @Override
     public void execute(final ShardingContext shardingContext) {
-        log.info("execute:" + shardingContext.toString());
+        log.info("ElasticSimpleJob.execute:" + shardingContext.toString());
         String shardingParameter = shardingContext.getShardingParameter();
         CreateJobMeta jobMeta = null;
         if (!StringUtils.isBlank(shardingParameter)) {
